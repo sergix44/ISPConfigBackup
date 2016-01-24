@@ -20,3 +20,6 @@ And finally launch it from console:
 ```shell
 python ISPConfigBackup.py
 ```
+
+# Warning
+I am not responsible for any damage to your servers/websites. If you point the finger at me for messing up your server, I will laugh at you.
