@@ -7,7 +7,9 @@ import subprocess
 #######--CONFIG--#######
 DB_USER = 'root'
 DB_PASSWORD = 'root'
-BACKUP_DIR = '/root'
+BACKUP_DIR = '/root/backups_ispconfig'
+BACKUP_ROTATION = False
+BACKUP_ROTATION_N = 5
 ########################
 
 temp_folder = tempfile.mkdtemp(prefix='pyISPCbackup')
@@ -44,7 +46,13 @@ for site in sites:
         shutil.rmtree(temp_folder + temp_folder_sites + site + '/log')
 
 print('-- Compressing...')
+if not os.path.exists(BACKUP_DIR):
+    os.makedirs(BACKUP_DIR)
 os.system('cd ' + temp_folder + ' && tar -zcf ' + BACKUP_DIR + '/ispconfig_' + strftime("%d-%m-%Y_%H:%M:%S", gmtime()) + '.tar.gz *')
+if BACKUP_ROTATION:
+    backups_in_folder = sorted(os.listdir(BACKUP_DIR), key=os.path.getctime)
+    if len(backups_in_folder) > BACKUP_ROTATION_N:
+        os.remove(BACKUP_DIR + '/' + backups_in_folder[0])
 
 print(' * Removing temp files...')
 shutil.rmtree(temp_folder)
