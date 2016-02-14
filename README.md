@@ -5,7 +5,7 @@ A simple python script for backup all sites and databases for ISPConfig
 Python 2
 
 # How to use
-Just edit the config in the main file, the `BACKUP_DIR` MUST be an absolute path.
+Just edit the config in the main file, the `BACKUP_DIR` MUST be an absolute path, no final `/`.
 
 ```
 #######--CONFIG--#######
