@@ -17,8 +17,7 @@ DROPBOX_UPLOAD_ACCESSKEY = 'INSERT-ACCESSKEY-HERE'
 
 if DROPBOX_UPLOAD:
     try:
-        import dropbox
-        import dropbox.files
+        from dropbox import dropbox, files
     except:
         print('-- ERROR: Failed to import DropBox Library, make sure it is installed. (pip install dropbox)')
         sys.exit(1)
@@ -59,29 +58,32 @@ for site in sites:
 print('-- Compressing...')
 if not os.path.exists(BACKUP_DIR):
     os.makedirs(BACKUP_DIR)
-os.system('cd ' + temp_folder + ' && tar -zcf ' + BACKUP_DIR + '/ispconfig_' + strftime("%d-%m-%Y_%H:%M:%S", gmtime()) + '.tar.gz *')
+os.system('cd ' + temp_folder + ' && tar -zcf ' + BACKUP_DIR + '/ispconfig_' + strftime("%d-%m-%Y_%H-%M-%S", gmtime()) + '.tar.gz *')
+print(' * Removing temp files...')
+shutil.rmtree(temp_folder)
+
 backups_in_folder = sorted(os.listdir(BACKUP_DIR), key=lambda f: os.path.getctime("{}/{}".format(BACKUP_DIR, f)))
 
 if DROPBOX_UPLOAD:
     print('-- Syncing with Dropbox...')
     try:
-        f = open(BACKUP_DIR + '/' + backups_in_folder[-1])
+        backup = open(BACKUP_DIR + '/' + backups_in_folder[-1], 'rb')
         file_size = os.path.getsize(BACKUP_DIR + '/' + backups_in_folder[-1])
-        CHUNK_SIZE = 4 * 1024 * 1024
+        CHUNK_SIZE = 30 * 1024 * 1024
         dbx = dropbox.Dropbox(DROPBOX_UPLOAD_ACCESSKEY)
         if file_size <= CHUNK_SIZE:
-            dbx.files_upload(f, '/' + backups_in_folder[-1])
+            dbx.files_upload(backup, '/' + backups_in_folder[-1])
         else:
-            upload_session_start_result = dbx.files_upload_session_start(f.read(CHUNK_SIZE))
-            cursor = dropbox.files.UploadSessionCursor(session_id=upload_session_start_result.session_id, offset=f.tell())
-            commit = dropbox.files.CommitInfo(path='/' + backups_in_folder[-1])
+            upload_session_start_result = dbx.files_upload_session_start(backup.read(CHUNK_SIZE))
+            cursor = files.UploadSessionCursor(session_id=upload_session_start_result.session_id, offset=backup.tell())
+            commit = files.CommitInfo(path='/' + backups_in_folder[-1])
 
-            while f.tell() < file_size:
-                if (file_size - f.tell()) <= CHUNK_SIZE:
-                    dbx.files_upload_session_finish(f.read(CHUNK_SIZE), cursor, commit)
+            while backup.tell() < file_size:
+                if (file_size - backup.tell()) <= CHUNK_SIZE:
+                    dbx.files_upload_session_finish(backup.read(CHUNK_SIZE), cursor, commit)
                 else:
-                    dbx.files_upload_session_append(f.read(CHUNK_SIZE), cursor.session_id, cursor.offset)
-                    cursor.offset = f.tell()
+                    dbx.files_upload_session_append(backup.read(CHUNK_SIZE), cursor.session_id, cursor.offset)
+                    cursor.offset = backup.tell()
 
     except Exception, e:
         print('* ERROR:' + str(e))
@@ -89,7 +91,7 @@ if DROPBOX_UPLOAD:
 if BACKUP_ROTATION:
     print('-- Backup rotation...')
     if len(backups_in_folder) > BACKUP_ROTATION_N:
-        print('* Removing old backup from locally...')
+        print('* Removing old backup locally...')
         os.remove(BACKUP_DIR + '/' + backups_in_folder[0])
         if DROPBOX_UPLOAD:
             print('* Removing old backup from Dropbox...')
@@ -98,6 +100,4 @@ if BACKUP_ROTATION:
             except Exception, e:
                 print('* ERROR:' + str(e))
 
-print(' * Removing temp files...')
-shutil.rmtree(temp_folder)
 print('-- Done.')
