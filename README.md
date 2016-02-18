@@ -3,9 +3,12 @@ A simple python script for backup all sites and databases for ISPConfig
 
 # Requirements
 Python 2
+Dropbox module (only if you want sync your backups with a dropbox account `pip install dropbox`)
 
 # How to use
-Just edit the config in the main file, the `BACKUP_DIR` MUST be an absolute path, no final `/`.
+Download the script: `wget https://raw.githubusercontent.com/SergiX44/ISPConfigBackup/master/ISPConfigBackup.py`
+
+Edit the config in the main file, the `BACKUP_DIR` MUST be an absolute path, no final `/`.
 
 ```
 #######--CONFIG--#######
@@ -14,6 +17,8 @@ DB_PASSWORD = 'root'
 BACKUP_DIR = '/root/backups_ispconfig' #the folder where the backup will be stored (don't put any other file in this folder if the rotation is "True")
 BACKUP_ROTATION = False #if you want enable the backup rotation (True or False)
 BACKUP_ROTATION_N = 5 #the number of backups that you want to keep (only if BACKUP_ROTATION is True)
+DROPBOX_UPLOAD = False #if you want that the backups will be synced with your dropbox account
+DROPBOX_UPLOAD_ACCESSKEY = 'INSERT-ACCESSKEY-HERE' # app access key needed for access to your account
 ########################
 ```
 
