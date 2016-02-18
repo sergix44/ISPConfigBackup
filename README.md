@@ -2,13 +2,13 @@
 A simple python script for backup all sites and databases for ISPConfig
 
 # Requirements
-Python 2
-Dropbox module (only if you want sync your backups with a dropbox account `pip install dropbox`)
++ Python 2
++ Dropbox module (only if you want sync your backups with a dropbox account `pip install dropbox`)
 
 # How to use
-Download the script: `wget https://raw.githubusercontent.com/SergiX44/ISPConfigBackup/master/ISPConfigBackup.py`
++ Download the script: `wget https://raw.githubusercontent.com/SergiX44/ISPConfigBackup/master/ISPConfigBackup.py`
 
-Edit the config in the main file, the `BACKUP_DIR` MUST be an absolute path, no final `/`.
++ Edit the config in the main file, the `BACKUP_DIR` MUST be an absolute path, no final `/`.
 
 ```
 #######--CONFIG--#######
@@ -22,7 +22,7 @@ DROPBOX_UPLOAD_ACCESSKEY = 'INSERT-ACCESSKEY-HERE' # app access key needed for a
 ########################
 ```
 
-And finally launch it from console:
++ And finally launch it from console:
 
 ```shell
 python ISPConfigBackup.py
