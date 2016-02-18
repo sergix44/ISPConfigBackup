@@ -10,7 +10,15 @@ DB_PASSWORD = 'root'
 BACKUP_DIR = '/root/backups_ispconfig'
 BACKUP_ROTATION = False
 BACKUP_ROTATION_N = 5
+DROPBOX_UPLOAD = False
+DROPBOX_UPLOAD_ACCESSKEY = 'INSERT-ACCESSKEY-HERE'
 ########################
+
+if DROPBOX_UPLOAD:
+    try:
+        import dropbox
+    except:
+        print('-- ERROR: Failed to import DropBox Library, make sure it is installed. (pip install dropbox)')
 
 temp_folder = tempfile.mkdtemp(prefix='pyISPCbackup')
 temp_folder_databases = '/databases/'
@@ -49,10 +57,26 @@ print('-- Compressing...')
 if not os.path.exists(BACKUP_DIR):
     os.makedirs(BACKUP_DIR)
 os.system('cd ' + temp_folder + ' && tar -zcf ' + BACKUP_DIR + '/ispconfig_' + strftime("%d-%m-%Y_%H:%M:%S", gmtime()) + '.tar.gz *')
+backups_in_folder = sorted(os.listdir(BACKUP_DIR), key=os.path.getctime)
+
+if DROPBOX_UPLOAD:
+    print('-- Syncing with Dropbox...')
+    try:
+        dpclient = dropbox.Dropbox(DROPBOX_UPLOAD_ACCESSKEY)
+        dpclient.files_upload(open(BACKUP_DIR + '/' + backups_in_folder[-1]), '/' + backups_in_folder[-1])
+    except Exception, e:
+        print('* ERROR:' + str(e))
+
 if BACKUP_ROTATION:
-    backups_in_folder = sorted(os.listdir(BACKUP_DIR), key=os.path.getctime)
+    print('-- Backup rotation...')
     if len(backups_in_folder) > BACKUP_ROTATION_N:
         os.remove(BACKUP_DIR + '/' + backups_in_folder[0])
+        if DROPBOX_UPLOAD:
+            print('-- Removing old files from Dropbox...')
+            try:
+                dpclient.files_delete('/' + backups_in_folder[0])
+            except Exception, e:
+                print('* ERROR:' + str(e))
 
 print(' * Removing temp files...')
 shutil.rmtree(temp_folder)
