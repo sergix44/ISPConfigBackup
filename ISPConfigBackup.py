@@ -18,6 +18,7 @@ DROPBOX_UPLOAD_ACCESSKEY = 'INSERT-ACCESSKEY-HERE'
 if DROPBOX_UPLOAD:
     try:
         import dropbox
+        import dropbox.files
     except:
         print('-- ERROR: Failed to import DropBox Library, make sure it is installed. (pip install dropbox)')
         sys.exit(1)
@@ -64,8 +65,24 @@ backups_in_folder = sorted(os.listdir(BACKUP_DIR), key=lambda f: os.path.getctim
 if DROPBOX_UPLOAD:
     print('-- Syncing with Dropbox...')
     try:
-        dpclient = dropbox.Dropbox(DROPBOX_UPLOAD_ACCESSKEY)
-        dpclient.files_upload(open(BACKUP_DIR + '/' + backups_in_folder[-1]), '/' + backups_in_folder[-1])
+        f = open(BACKUP_DIR + '/' + backups_in_folder[-1])
+        file_size = os.path.getsize(BACKUP_DIR + '/' + backups_in_folder[-1])
+        CHUNK_SIZE = 4 * 1024 * 1024
+        dbx = dropbox.Dropbox(DROPBOX_UPLOAD_ACCESSKEY)
+        if file_size <= CHUNK_SIZE:
+            dbx.files_upload(f, '/' + backups_in_folder[-1])
+        else:
+            upload_session_start_result = dbx.files_upload_session_start(f.read(CHUNK_SIZE))
+            cursor = dropbox.files.UploadSessionCursor(session_id=upload_session_start_result.session_id, offset=f.tell())
+            commit = dropbox.files.CommitInfo(path='/' + backups_in_folder[-1])
+
+            while f.tell() < file_size:
+                if (file_size - f.tell()) <= CHUNK_SIZE:
+                    dbx.files_upload_session_finish(f.read(CHUNK_SIZE), cursor, commit)
+                else:
+                    dbx.files_upload_session_append(f.read(CHUNK_SIZE), cursor.session_id, cursor.offset)
+                    cursor.offset = f.tell()
+
     except Exception, e:
         print('* ERROR:' + str(e))
 
@@ -77,7 +94,7 @@ if BACKUP_ROTATION:
         if DROPBOX_UPLOAD:
             print('* Removing old backup from Dropbox...')
             try:
-                dpclient.files_delete('/' + backups_in_folder[0])
+                dbx.files_delete('/' + backups_in_folder[0])
             except Exception, e:
                 print('* ERROR:' + str(e))
 
