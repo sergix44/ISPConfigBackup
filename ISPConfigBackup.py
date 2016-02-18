@@ -3,6 +3,7 @@ import os
 import tempfile
 import shutil
 import subprocess
+import sys
 
 #######--CONFIG--#######
 DB_USER = 'root'
@@ -19,6 +20,7 @@ if DROPBOX_UPLOAD:
         import dropbox
     except:
         print('-- ERROR: Failed to import DropBox Library, make sure it is installed. (pip install dropbox)')
+        sys.exit(1)
 
 temp_folder = tempfile.mkdtemp(prefix='pyISPCbackup')
 temp_folder_databases = '/databases/'
@@ -57,7 +59,7 @@ print('-- Compressing...')
 if not os.path.exists(BACKUP_DIR):
     os.makedirs(BACKUP_DIR)
 os.system('cd ' + temp_folder + ' && tar -zcf ' + BACKUP_DIR + '/ispconfig_' + strftime("%d-%m-%Y_%H:%M:%S", gmtime()) + '.tar.gz *')
-backups_in_folder = sorted(os.listdir(BACKUP_DIR), key=os.path.getctime)
+backups_in_folder = sorted(os.listdir(BACKUP_DIR), key=lambda f: os.path.getctime("{}/{}".format(BACKUP_DIR, f)))
 
 if DROPBOX_UPLOAD:
     print('-- Syncing with Dropbox...')
@@ -70,9 +72,10 @@ if DROPBOX_UPLOAD:
 if BACKUP_ROTATION:
     print('-- Backup rotation...')
     if len(backups_in_folder) > BACKUP_ROTATION_N:
+        print('* Removing old backup from locally...')
         os.remove(BACKUP_DIR + '/' + backups_in_folder[0])
         if DROPBOX_UPLOAD:
-            print('-- Removing old files from Dropbox...')
+            print('* Removing old backup from Dropbox...')
             try:
                 dpclient.files_delete('/' + backups_in_folder[0])
             except Exception, e:
