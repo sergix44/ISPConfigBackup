@@ -22,7 +22,7 @@ BACKUP_ROTATION_N = 5 #the number of backups that you want to keep (only if BACK
 DROPBOX_UPLOAD = False #if you want that the backups will be synced with your dropbox account
 DROPBOX_UPLOAD_ACCESSKEY = 'INSERT-ACCESSKEY-HERE' # app access key needed for access to your account
 
-SUBDOMAINS_AS_DOMAIN = 'sub.site.it,sub.site2.com' #add here the subdomains that you have added as domain (no spaces, comma separated)
+SUBDOMAINS_AS_DOMAIN = 'sub.site.it,sub.site2.com' #add here the subdomains that you have added as domain, or left it empty (no spaces, comma separated)
 ########################
 ```
 
