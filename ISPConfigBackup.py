@@ -1,19 +1,10 @@
 from time import gmtime, strftime
+from config import *
 import os
 import tempfile
 import shutil
 import subprocess
 import sys
-
-#######--CONFIG--#######
-DB_USER = 'root'
-DB_PASSWORD = 'root'
-BACKUP_DIR = '/root/backups_ispconfig'
-BACKUP_ROTATION = False
-BACKUP_ROTATION_N = 5
-DROPBOX_UPLOAD = False
-DROPBOX_UPLOAD_ACCESSKEY = 'INSERT-ACCESSKEY-HERE'
-########################
 
 if DROPBOX_UPLOAD:
     try:
@@ -25,6 +16,8 @@ if DROPBOX_UPLOAD:
 temp_folder = tempfile.mkdtemp(prefix='pyISPCbackup')
 temp_folder_databases = '/databases/'
 temp_folder_sites = '/sites/'
+
+spec_domains =  SUBDOMAINS_AS_DOMAIN.split(',')
 
 print(' * Fetching databases...')
 databases = subprocess.check_output('mysql --user=' + DB_USER + ' --password=' + DB_PASSWORD + ' -e "SHOW DATABASES;" | tr -d "| " | grep -v Database', shell=True).split('\n')
@@ -44,7 +37,7 @@ print('-- Backup sites')
 sites = subprocess.check_output('ls /var/www/ | grep "\."', shell=True).split('\n')
 sites = [x for x in sites if x]
 for site in sites:
-    if site.count('.') >= 2:
+    if (site.count('.') >= 2) and (site not in spec_domains):
         continue
     print(' * Saving ' + site + '...')
     os.system('cp -Lr /var/www/' + site + ' ' + temp_folder + temp_folder_sites + site + '/')
